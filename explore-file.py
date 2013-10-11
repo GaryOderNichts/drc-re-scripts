@@ -220,12 +220,7 @@ def do_log():
     set_name(log_ea, 'log')
     SetType(log_ea, 'void log(char *fmt, ...);')
 
-if __name__ == '__main__':
-    setup_compiler_options()
-    add_base_types()
-    process_xcpt_vectors()
-    patch_assert_hang()
-    
+def unmark_first_mismarked_code():
     textSeg = get_segm_by_name('.text')
     # try to find and remove the chunk of thumb which
     # ida incorrectly thinks is arm...
@@ -242,9 +237,38 @@ if __name__ == '__main__':
             SetReg(thumb_push, 't', 1)
             Wait()
             break
+
+def make_unreferenced_funcs():
+    # After analysis, there can be many functions which ida identifies
+    # correctly, however cannot see how control flow reaches them. This
+    # results in code regions which are not marked as functions, which
+    # screws up trying to use get_func() at later points.
+    # Here, we effectively visit all these regions and press 'P' on them :)
+    textSeg = get_segm_by_name('.text')
+    ea = textSeg.startEA
+    while ea < textSeg.endEA:
+        ea = NextHead(ea, textSeg.endEA)
+        if ea == BADADDR: break
+        func = get_func(ea)
+        if not func is None and func.endEA > ea:
+            ea = func.endEA
+            continue
+        if isCode(getFlags(ea)):
+            print '%8x making func...' % (ea)
+            MakeFunction(ea)
+            Wait()
     
+if __name__ == '__main__':
+    setup_compiler_options()
+    add_base_types()
+    process_xcpt_vectors()
+    patch_assert_hang()
+    unmark_first_mismarked_code()
+    
+    textSeg = get_segm_by_name('.text')
     AnalyzeArea(textSeg.startEA, textSeg.endEA)
     
+    make_unreferenced_funcs()
     do_svc_a()
     do_log()
     print 'Done, please run "Reanalyze program"!'
