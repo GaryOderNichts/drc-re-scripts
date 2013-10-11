@@ -9,6 +9,8 @@ from idc import *
 import os
 
 def MakeNameAuto(ea, name):
+    if get_name(0, ea) == name:
+        return
     i = 0
     fname = name
     while not set_name(ea, fname, SN_NON_AUTO | SN_NOCHECK | SN_NOWARN):
@@ -30,5 +32,6 @@ if __name__ == '__main__':
                 continue
             dref_map[dref_func.startEA] = func_name
             
-    for func_ea, name in dref_map.items():
+    for func_ea, name in sorted(dref_map.items()):
+        #print '%8x %s' % (func_ea, name)
         MakeNameAuto(func_ea, name)
