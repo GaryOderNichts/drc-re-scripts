@@ -251,7 +251,7 @@ def make_unreferenced_funcs():
         if ea == BADADDR: break
         func = get_func(ea)
         if not func is None and func.endEA > ea:
-            ea = func.endEA
+            ea = func.endEA - 1
             continue
         if isCode(getFlags(ea)):
             print '%8x making func...' % (ea)
