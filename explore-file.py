@@ -140,11 +140,10 @@ def process_xcpt_vectors():
     dataSegBegin = FindBinary(textSeg.endEA, 0, '02 42 52 e8 04')
     if dataSegBegin != BADADDR:
         dataSegEnd = textSeg.endEA
-        textSeg.endEA = dataSegBegin
         seg = segment_t()
         seg.startEA = dataSegBegin
         seg.endEA = dataSegEnd
-        add_segm_ex(seg, '.idata', 'DATA', ADDSEG_SPARSE)
+        add_segm_ex(seg, '.idata', 'DATA', ADDSEG_SPARSE | ADDSEG_QUIET)
     
     bss_high = 0
     for i, bss in enumerate(bsss):
